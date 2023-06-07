@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="19082014-1" author="autor">
+        <comment>
+            Создание таблицы изображений
+        </comment>
+        <sql>
+            CREATE TABLE images
+            (
+                id bigint NOT NULL,
+                alt character varying(255),
+                url_big character varying(255),
+                url_small character varying(255),
+                CONSTRAINT images_pkey PRIMARY KEY (id)
+            )
+        </sql>
+
+        <sql>
+            DROP TABLE images;
+            DROP TABLE images_1;
+        </sql>
+
+        <sql>
+            CREATE TABLE developers
+            (
+                id bigint primary key auto_increment,
+                first_name varchar(50) not null,
+                last_name varchar(50) not null,
+                speciality varchar(50) not null,
+                status bit not null
+            )
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
