@@ -13,35 +13,31 @@ public class SpecialityService {
     private SpecialityRepository specialityRepository;
 
     public SpecialityService() {
-        try {
-            this.specialityRepository = new JdbcSpecialityRepositoryImpl();
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        this.specialityRepository = new JdbcSpecialityRepositoryImpl();
     }
 
-    public Speciality addNewSpec(Speciality speciality){
+    public Speciality addNewSpec(Speciality speciality) {
         return this.specialityRepository.addNew(speciality);
     }
 
-    public List<Speciality> getAllSpecs(){
+    public List<Speciality> getAllSpecs() {
         return this.specialityRepository.getAll();
     }
 
-    public Speciality getSpecById(Long id){
+    public Speciality getSpecById(Long id) {
         return this.specialityRepository.getById(id);
     }
 
-    public Speciality updateSpecName(String name, Long specId){
+    public Speciality updateSpecName(String name, Long specId) {
         Speciality speciality = this.getSpecById(specId);
-        if(speciality != null) {
+        if (speciality != null) {
             speciality.setName(name);
             return this.specialityRepository.update(speciality);
         }
         return null;
     }
 
-    public boolean delete(Long id){
+    public boolean delete(Long id) {
         return this.specialityRepository.delete(id);
     }
 }

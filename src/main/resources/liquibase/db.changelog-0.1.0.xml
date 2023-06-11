@@ -8,33 +8,46 @@
 
     <changeSet id="19082014-1" author="autor">
         <comment>
-            Создание таблицы изображений
+            Creation of the speciality, skills, developers and devs_skills tables
         </comment>
         <sql>
-            CREATE TABLE images
+            CREATE TABLE speciality
             (
-                id bigint NOT NULL,
-                alt character varying(255),
-                url_big character varying(255),
-                url_small character varying(255),
-                CONSTRAINT images_pkey PRIMARY KEY (id)
-            )
-        </sql>
+                id                 bigint primary key auto_increment,
+                speciality_name    varchar(50) not null,
+                active_status_spec bit         not null
+            );
 
-        <sql>
-            DROP TABLE images;
-            DROP TABLE images_1;
-        </sql>
+            CREATE TABLE skills
+            (
+                id                  bigint primary key auto_increment,
+                skill_name          varchar(50) not null,
+                active_status_skill bit         not null
+            );
 
-        <sql>
             CREATE TABLE developers
             (
-                id bigint primary key auto_increment,
-                first_name varchar(50) not null,
-                last_name varchar(50) not null,
-                speciality varchar(50) not null,
-                status bit not null
-            )
+                id                bigint primary key auto_increment,
+                id_spec           bigint      not null,
+                first_name        varchar(50) not null,
+                last_name         varchar(50) not null,
+                active_status_dev bit         not null,
+                foreign key (id_spec) references speciality (id)
+                    on delete cascade on update cascade
+            );
+
+            CREATE TABLE devs_skills
+            (
+                id       bigint primary key auto_increment,
+                id_dev   bigint not null,
+                id_skill bigint not null,
+                foreign key (id_dev) references developers (id)
+                    on delete cascade on update cascade,
+                foreign key (id_skill) references skills (id)
+                    on delete cascade on update cascade
+            );
+
+            INSERT into speciality(id, speciality_name, active_status_spec) values (1, 'default speciality', 1);
         </sql>
     </changeSet>
 

@@ -1,31 +1,23 @@
 package com.geopokrovskiy.repository.jdbc;
 
 
-import com.geopokrovskiy.model.Skill;
 import com.geopokrovskiy.model.Speciality;
 import com.geopokrovskiy.model.Status;
 import com.geopokrovskiy.repository.SpecialityRepository;
-import com.geopokrovskiy.сonstants.Constants;
+import com.geopokrovskiy.utils.JdbcUtils;
 
 
-import java.io.*;
-import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoCloseable {
+public class JdbcSpecialityRepositoryImpl implements SpecialityRepository {
 
-    private Connection conn;
 
-    public JdbcSpecialityRepositoryImpl() throws SQLException, ClassNotFoundException{
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        this.conn = DriverManager.getConnection(Constants.DB_URL, Constants.USERNAME, Constants.PASSWORD);
-    }
+
     @Override
     public Speciality addNew(Speciality value) {
         String sql = "insert into speciality(speciality_name, active_status_spec) values (?, 1)";
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatementWithKeys(sql)) {
             preparedStatement.setString(1, value.getName());
             int row = preparedStatement.executeUpdate();
             if (row <= 0) {
@@ -37,7 +29,7 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
                 }
             }
             return value;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
@@ -46,7 +38,7 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
     @Override
     public Speciality getById(Long aLong) {
         String sql = "select * from speciality where speciality.id=? AND active_status_spec=true";
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
             preparedStatement.setLong(1, aLong);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (!resultSet.next()) {
@@ -57,7 +49,8 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
             speciality.setName(resultSet.getString(2));
             speciality.setStatus(Status.ACTIVE);
             return speciality;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -66,7 +59,7 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
     public List<Speciality> getAll() {
         String sql = "select * from speciality where speciality.active_status_spec=true";
         ArrayList<Speciality> specs = new ArrayList<>();
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 Speciality speciality = new Speciality();
@@ -75,7 +68,8 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
                 speciality.setStatus(Status.ACTIVE);
                 specs.add(speciality);
             }
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return specs;
     }
@@ -84,11 +78,12 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
     public Speciality update(Speciality value) {
         String sql = "UPDATE speciality SET speciality.speciality_name=? " +
                 "WHERE speciality.id =? AND speciality.active_status_spec=true";
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
             preparedStatement.setString(1, value.getName());
             preparedStatement.setLong(2, value.getId());
             if (preparedStatement.executeUpdate() > 0) return value;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -96,23 +91,18 @@ public class JdbcSpecialityRepositoryImpl implements SpecialityRepository, AutoC
     @Override
     public boolean delete(Long aLong) {
         Speciality speciality = this.getById(aLong);
-        if(speciality != null) {
+        if (speciality != null) {
             speciality.setStatus(Status.DELETED);
             String sql = "UPDATE speciality SET speciality.active_status_spec=false WHERE speciality.id=?";
-            try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+            try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
                 preparedStatement.setLong(1, aLong);
                 return preparedStatement.executeUpdate() > 0;
-            } catch (SQLException e) {
+            } catch (SQLException | ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         return false;
     }
 
 
-    @Override
-    public void close() throws Exception {
-        if(this.conn != null){
-            this.conn.close();
-        }
-    }
 }

@@ -63,6 +63,6 @@ public class Skill {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", status=" + status +
-                '}';
+                "}\n";
     }
 }

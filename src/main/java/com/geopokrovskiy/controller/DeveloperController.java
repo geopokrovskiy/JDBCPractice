@@ -2,7 +2,6 @@ package com.geopokrovskiy.controller;
 
 import com.geopokrovskiy.model.Developer;
 import com.geopokrovskiy.model.Skill;
-import com.geopokrovskiy.model.Speciality;
 import com.geopokrovskiy.model.Status;
 import com.geopokrovskiy.service.DeveloperService;
 
@@ -35,7 +34,7 @@ public class DeveloperController {
         return this.developerService.getDevById(id);
     }
 
-    public Developer changeDevFirstName(String firstName, Long id){
+    public Developer changeFirstName(String firstName, Long id){
         return this.developerService.updateDevFirstName(firstName, id);
     }
 

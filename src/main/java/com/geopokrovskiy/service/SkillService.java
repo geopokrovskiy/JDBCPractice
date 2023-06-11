@@ -11,35 +11,31 @@ public class SkillService {
     private SkillRepository skillRepository;
 
     public SkillService() {
-        try {
-            this.skillRepository = new JdbcSkillRepositoryImpl();
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        this.skillRepository = new JdbcSkillRepositoryImpl();
     }
 
-    public Skill addNewSkill(Skill skill){
+    public Skill addNewSkill(Skill skill) {
         return this.skillRepository.addNew(skill);
     }
 
-    public List<Skill> getAllSkills(){
+    public List<Skill> getAllSkills() {
         return this.skillRepository.getAll();
     }
 
-    public Skill getSkillById(Long id){
+    public Skill getSkillById(Long id) {
         return this.skillRepository.getById(id);
     }
 
-    public Skill updateSkillName(String name, Long skillId){
+    public Skill updateSkillName(String name, Long skillId) {
         Skill skill = this.getSkillById(skillId);
-        if(skill != null) {
+        if (skill != null) {
             skill.setName(name);
             return this.skillRepository.update(skill);
         }
         return null;
     }
 
-    public boolean delete(Long id){
+    public boolean delete(Long id) {
         return this.skillRepository.delete(id);
     }
 }

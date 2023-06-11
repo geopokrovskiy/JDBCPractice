@@ -5,25 +5,41 @@ import com.geopokrovskiy.model.Skill;
 import com.geopokrovskiy.model.Speciality;
 import com.geopokrovskiy.model.Status;
 import com.geopokrovskiy.repository.DeveloperRepository;
-import com.geopokrovskiy.сonstants.Constants;
+import com.geopokrovskiy.repository.SpecialityRepository;
+import com.geopokrovskiy.utils.JdbcUtils;
+import com.mysql.cj.protocol.Resultset;
 
 
 import java.sql.*;
 import java.util.*;
 
-public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoCloseable {
+public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
-    private Connection conn;
-
-    public JdbcDeveloperRepositoryImpl() throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        this.conn = DriverManager.getConnection(Constants.DB_URL, Constants.USERNAME, Constants.PASSWORD);
+    private Developer mapResultSetToDeveloper(ResultSet resultSet) throws SQLException{
+        Developer developer = new Developer();
+        List<Skill> skills = new ArrayList<>();
+        while(resultSet.next()){
+            developer.setId(resultSet.getLong(1));
+            developer.setFirstName(resultSet.getString(2));
+            developer.setLastName(resultSet.getString(3));
+            Speciality speciality = new Speciality(resultSet.getString(4));
+            speciality.setId(resultSet.getLong(5));
+            developer.setSpeciality(speciality);
+            if(resultSet.getString(7) != null) {
+                Skill skill = new Skill(resultSet.getString(7));
+                skill.setId(resultSet.getLong(6));
+                skills.add(skill);
+            }
+        }
+        developer.setStatus(Status.ACTIVE);
+        developer.setSkills(skills);
+        return developer;
     }
 
     @Override
     public Developer addNew(Developer value) {
         String sql = "insert into developers(id_spec, first_name, last_name, active_status_dev) values (1, ?, ?, 1)";
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatementWithKeys(sql)) {
             preparedStatement.setString(1, value.getFirstName());
             preparedStatement.setString(2, value.getLastName());
 
@@ -37,7 +53,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
                 }
             }
             return value;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
@@ -45,42 +61,34 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
 
     @Override
     public Developer getById(Long aLong) {
-        String sql = "select * from developers where developers.id=? AND developers.active_status_dev=true";
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+        String sql = "SELECT DISTINCT developers.id, first_name, last_name, speciality_name, s.id, skls.id, skill_name " +
+                "    FROM developers " +
+                "    LEFT JOIN speciality s on developers.id_spec = s.id\n" +
+                "    LEFT JOIN devs_skills ds ON developers.id = ds.id_dev\n" +
+                "    LEFT JOIN skills skls ON ds.id_skill = skls.id\n" +
+                "    WHERE developers.active_status_dev=true AND s.active_status_spec=true AND developers.id=?";
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
             preparedStatement.setLong(1, aLong);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) {
-                return null;
-            }
-            Developer developer = new Developer();
-            developer.setId(resultSet.getLong(1));
-            developer.setSpeciality(new Speciality("default speciality"));
-            developer.setFirstName(resultSet.getString(3));
-            developer.setLastName(resultSet.getString(4));
-            developer.setStatus(Status.ACTIVE);
-            developer.setSkills(null);
-            return developer;
-        } catch (SQLException e) {
-
+            return mapResultSetToDeveloper(resultSet);
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
     @Override
     public List<Developer> getAll() {
-        String sql = "select * from developers where developers.active_status_dev=true";
+        String sql = "SELECT developers.id from developers WHERE active_status_dev=true";
         ArrayList<Developer> developers = new ArrayList<>();
-        try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Developer developer = new Developer();
-                developer.setId(resultSet.getLong(1));
-                developer.setFirstName(resultSet.getString(3));
-                developer.setLastName(resultSet.getString(4));
-                developer.setStatus(Status.ACTIVE);
+                Developer developer = this.getById(resultSet.getLong(1));
                 developers.add(developer);
             }
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return developers;
     }
@@ -89,17 +97,14 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
     public Developer update(Developer value) {
         String sql = "UPDATE developers SET developers.id_spec=?, developers.first_name=?, developers.last_name=? WHERE " +
                 "developers.id =? AND developers.active_status_dev=true";
-        try(PreparedStatement preparedStatement = this.conn.prepareStatement(sql)){
-            if(value.getSpeciality().getId() != null){
-                preparedStatement.setLong(1, value.getSpeciality().getId());
-            }
-            preparedStatement.setLong(1, 1);
+        try(PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)){
+            preparedStatement.setLong(1, value.getSpeciality().getId());
             preparedStatement.setString(2, value.getFirstName());
             preparedStatement.setString(3, value.getLastName());
             preparedStatement.setLong(4, value.getId());
             if(preparedStatement.executeUpdate() > 0) return value;
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -110,10 +115,11 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
         if(developer != null) {
             developer.setStatus(Status.DELETED);
             String sql = "UPDATE developers SET developers.active_status_dev=false WHERE developers.id=?";
-            try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+            try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
                 preparedStatement.setLong(1, aLong);
                 return preparedStatement.executeUpdate() > 0;
-            } catch (SQLException e) {
+            } catch (SQLException | ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         return false;
@@ -124,16 +130,16 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
         if(developer != null) {
             for (Skill skill : skills) {
                 String sql = "INSERT INTO devs_skills(id_dev, id_skill) values(?, ?)";
-                try (PreparedStatement preparedStatement = this.conn.prepareStatement(sql)) {
+                try (PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)) {
                     preparedStatement.setLong(1, developerId);
                     preparedStatement.setLong(2, skill.getId());
                     preparedStatement.execute();
                     List<Skill> skillList = developer.getSkills();
                     if(skillList == null) skillList = new ArrayList<>();
                     skillList.add(skill);
-                    developer.setSkills(skills);
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
+                    developer.setSkills(skillList);
+                } catch (SQLException | ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
             return developer;
@@ -144,7 +150,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
     public List<Long> getSkillIds(Long developerId){
         String sql = "SELECT id_skill FROM devs_skills where devs_skills.id_dev=?";
         List<Long> skillIds = new ArrayList<>();
-        try(PreparedStatement preparedStatement = this.conn.prepareStatement(sql)){
+        try(PreparedStatement preparedStatement = JdbcUtils.preparedStatement(sql)){
             preparedStatement.setLong(1, developerId);
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()){
@@ -152,16 +158,9 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository, AutoClo
             }
             return skillIds;
         }
-        catch (SQLException e){
+        catch (SQLException | ClassNotFoundException e){
             System.out.println(e.getMessage());
         }
         return null;
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (this.conn != null) {
-            this.conn.close();
-        }
     }
 }

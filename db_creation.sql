@@ -38,6 +38,8 @@ ALTER TABLE developers MODIFY id_spec bigint default 0;
 
 INSERT into speciality(id, speciality_name, active_status_spec) values (1, 'default speciality', 1);
 
+DROP TABLE skills;
+
 
 
 
