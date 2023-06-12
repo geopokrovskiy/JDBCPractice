@@ -3,9 +3,9 @@ package com.geopokrovskiy.service;
 import com.geopokrovskiy.model.Developer;
 import com.geopokrovskiy.model.Skill;
 import com.geopokrovskiy.model.Speciality;
+import com.geopokrovskiy.model.Status;
 import com.geopokrovskiy.repository.jdbc.JdbcDeveloperRepositoryImpl;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +22,8 @@ public class DeveloperService {
 
     public Developer addNewDeveloper(Developer developer) {
         developer.setSpeciality(this.specialityService.getSpecById(1L));
+        developer.setStatus(Status.ACTIVE);
+        developer.setSkills(new ArrayList<>());
         return this.developerRepository.addNew(developer);
     }
 

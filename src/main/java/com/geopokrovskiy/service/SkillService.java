@@ -4,7 +4,6 @@ import com.geopokrovskiy.model.Skill;
 import com.geopokrovskiy.repository.SkillRepository;
 import com.geopokrovskiy.repository.jdbc.JdbcSkillRepositoryImpl;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public class SkillService {

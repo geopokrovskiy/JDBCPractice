@@ -2,7 +2,6 @@ package com.geopokrovskiy.controller;
 
 import com.geopokrovskiy.model.Developer;
 import com.geopokrovskiy.model.Skill;
-import com.geopokrovskiy.model.Status;
 import com.geopokrovskiy.service.DeveloperService;
 
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ public class DeveloperController {
 
     public Developer addDeveloper(String firstName, String lastName){
         Developer developer = new Developer(firstName, lastName, null, null);
-        developer.setStatus(Status.ACTIVE);
         return this.developerService.addNewDeveloper(developer);
     }
 

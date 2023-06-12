@@ -39,50 +39,6 @@ public class DeveloperView {
                     System.out.println("Enter the last name of the developer: ");
                     lastName = scanner.nextLine();
                 }
-                /*List<Speciality> specList = specialityController.getAllSpecs();
-                Speciality devSpeciality = null;
-                if (!specList.isEmpty()) {
-                    while (devSpeciality == null) {
-                        System.out.println("Choose the speciality among the list: ");
-                        specList.forEach(speciality -> {
-                            System.out.println(speciality.getId() + ") " + speciality.getName());
-                        });
-                        long id;
-                        try {
-                            id = scanner.nextLong();
-                            devSpeciality = specList.stream().filter(spec -> spec.getId() == id).findFirst().orElse(null);
-                        } catch (InputMismatchException e){
-                            System.out.println("Incorrect input!");
-                        }
-                    }
-                }*/
-                /*List<Skill> skillList = skillController.getAllSkills();
-                Set<Skill> chosenSkills = new TreeSet<>(Comparator.comparingLong(Skill::getId));
-                if (!skillList.isEmpty()) {
-                    while (true) {
-                        System.out.println("Choose skills among the list. Press 0 to quit");
-                        skillList.forEach(skill -> {
-                            System.out.println(skill.getId() + ") " + skill.getName());
-                        });
-                        long id;
-                        try {
-                            id = scanner.nextLong();
-                            if (id == 0) {
-                                break;
-                            }
-                            Skill devSkill = skillList.stream().filter(skill -> skill.getId() == id).findFirst().orElse(null);
-                            if (devSkill != null) {
-                                chosenSkills.add(devSkill);
-                                System.out.println("The skill has been added! The list of chosen skills: ");
-                                chosenSkills.forEach(skill -> {
-                                    System.out.println(skill.getId() + ") " + skill.getName());
-                                });
-                            }
-                        } catch (InputMismatchException e) {
-                            System.out.println("Incorrect input!");
-                        }
-                    }
-                }*/
                 if(developerController.addDeveloper(firstName, lastName) != null){
                     System.out.println("The developer has been added!");
                 }
